@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CRED</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --bg:       #0a0a0f;
+    --surface:  #13131a;
+    --border:   #1e1e2e;
+    --accent:   #e8c547;
+    --accent2:  #c94040;
+    --text:     #e8e8f0;
+    --muted:    #6b6b80;
+    --pill-bg:  #1a1a26;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #loading-screen, #app { display: none; }
+  #app { flex-direction: column; min-height: 100vh; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior: none;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 0;
+  }
+
+  .login-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(5rem, 20vw, 10rem);
+    letter-spacing: .12em;
+    color: var(--accent);
+    line-height: 1;
+    margin-bottom: .15em;
+    text-shadow: 0 0 80px rgba(232,197,71,.25);
+  }
+
+  .login-tagline {
+    color: var(--muted);
+    font-size: .85rem;
+    letter-spacing: .25em;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+  }
+
+  .login-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    width: min(380px, 90vw);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .login-box input {
+    background: var(--pill-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: .95rem;
+    padding: .75rem 1rem;
+    outline: none;
+    transition: border-color .2s;
+    width: 100%;
+  }
+  .login-box input:focus { border-color: var(--accent); }
+  .login-box input::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #0a0a0f;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    padding: .8rem;
+    text-transform: uppercase;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn-primary:hover { opacity: .88; transform: translateY(-1px); }
+  .btn-primary:active { transform: translateY(0); opacity: 1; }
+
+  .login-alt {
+    text-align: center;
+    font-size: .8rem;
+    color: var(--muted);
+  }
+  .login-alt a {
+    color: var(--accent);
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .login-alt a:hover { text-decoration: underline; }
+
+  #login-error {
+    color: var(--accent2);
+    font-size: .82rem;
+    text-align: center;
+    min-height: 1.2em;
+  }
+
+  /* ── LOADING ── */
+  #loading-screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 1.2rem;
+  }
+  .loading-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 4rem;
+    letter-spacing: .15em;
+    color: var(--accent);
+  }
+  .loading-bar-outer {
+    width: 180px;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .loading-bar-inner {
+    height: 100%;
+    background: var(--accent);
+    animation: load 1.4s ease-in-out infinite;
+    border-radius: 2px;
+  }
+  @keyframes load {
+    0%   { width: 0%; margin-left: 0; }
+    50%  { width: 60%; margin-left: 20%; }
+    100% { width: 0%; margin-left: 100%; }
+  }
+  .loading-text { color: var(--muted); font-size: .82rem; letter-spacing: .15em; text-transform: uppercase; }
+
+  /* ── APP SHELL ── */
+  #app {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.9rem;
+    letter-spacing: .12em;
+    color: var(--accent);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .user-pill {
+    background: var(--pill-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: .35rem .9rem;
+    font-size: .82rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+  .user-pill span { color: var(--text); font-weight: 500; }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: .8rem;
+    padding: .35rem .75rem;
+    transition: color .15s, border-color .15s;
+  }
+  .logout-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    gap: .25rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: .85rem;
+    font-weight: 500;
+    letter-spacing: .06em;
+    padding: .85rem 1.1rem;
+    text-transform: uppercase;
+    transition: color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    margin-bottom: 1.75rem;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.2rem;
+    letter-spacing: .08em;
+    color: var(--text);
+    line-height: 1;
+  }
+  .section-subtitle {
+    color: var(--muted);
+    font-size: .82rem;
+    margin-top: .35rem;
+  }
+
+  /* ── CARD GRID ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: .75rem;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    padding: .95rem 1rem;
+    text-decoration: none;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: .88rem;
+    font-weight: 500;
+    transition: border-color .15s, background .15s, transform .1s;
+    line-height: 1.3;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    background: #16161f;
+    transform: translateY(-2px);
+  }
+  .card:active { transform: translateY(0); }
+
+  .card-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--pill-bg);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+  }
+
+  /* arc type coloring */
+  .card[data-type="op"] .card-icon { background: rgba(232,197,71,.12); border-color: rgba(232,197,71,.25); }
+  .card[data-type="book"] .card-icon { background: rgba(80,160,230,.12); border-color: rgba(80,160,230,.25); }
+
+  /* ── HOME DASHBOARD ── */
+  .home-greeting {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    letter-spacing: .06em;
+    line-height: 1;
+    margin-bottom: .5rem;
+  }
+  .home-greeting em {
+    color: var(--accent);
+    font-style: normal;
+  }
+
+  .home-sub {
+    color: var(--muted);
+    font-size: .88rem;
+    margin-bottom: 2rem;
+  }
+
+  .home-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .home-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    padding: 1.5rem;
+    transition: border-color .15s, background .15s, transform .12s;
+  }
+  .home-card:hover {
+    border-color: var(--accent);
+    background: #16161f;
+    transform: translateY(-3px);
+  }
+  .home-card-icon { font-size: 1.8rem; margin-bottom: .75rem; }
+  .home-card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.3rem;
+    letter-spacing: .06em;
+    color: var(--text);
+    margin-bottom: .3rem;
+  }
+  .home-card-desc { color: var(--muted); font-size: .8rem; line-height: 1.5; }
+
+  /* ── ADMIN FORM ── */
+  .add-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 540px;
+  }
+  .form-row { display: flex; flex-direction: column; gap: .4rem; }
+  .form-row label { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; }
+  .form-row input, .form-row select {
+    background: var(--pill-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: .9rem;
+    padding: .65rem .9rem;
+    outline: none;
+    transition: border-color .2s;
+  }
+  .form-row input:focus, .form-row select:focus { border-color: var(--accent); }
+  .form-row input::placeholder { color: var(--muted); }
+  .form-row select option { background: var(--surface); }
+
+  /* ── SECTION TABS (series switcher inside movies/books) ── */
+  .series-tabs {
+    display: flex;
+    gap: .4rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .series-tab {
+    background: var(--pill-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: .82rem;
+    font-weight: 500;
+    padding: .4rem 1rem;
+    transition: color .15s, border-color .15s, background .15s;
+  }
+  .series-tab:hover { color: var(--text); border-color: var(--muted); }
+  .series-tab.active { color: var(--accent); border-color: var(--accent); background: rgba(232,197,71,.08); }
+
+  .series-panel { display: none; }
+  .series-panel.active { display: block; }
+
+  /* manage list */
+  .manage-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: .6rem 1rem;
+    margin-bottom: .5rem;
+    font-size: .85rem;
+    gap: 1rem;
+  }
+  .manage-item-info { flex: 1; min-width: 0; }
+  .manage-item-title { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .manage-item-meta { color: var(--muted); font-size: .75rem; margin-top: .15rem; }
+  .del-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--accent2);
+    cursor: pointer;
+    font-size: .75rem;
+    padding: .3rem .6rem;
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+  .del-btn:hover { background: rgba(201,64,64,.12); }
+
+  /* ── RESPONSIVE ── */
+  /* ── MOBILE ── */
+  @media (max-width: 600px) {
+    /* login */
+    .login-logo { font-size: clamp(4rem, 22vw, 7rem); }
+    .login-box { padding: 1.5rem 1.25rem; }
+
+    /* shell */
+    header { padding: 0 1rem; height: 50px; }
+    .header-logo { font-size: 1.5rem; }
+    .user-pill { display: none; }
+    nav { padding: 0 .5rem; }
+    .nav-btn { font-size: .75rem; padding: .75rem .7rem; letter-spacing: .03em; }
+
+    /* content */
+    main { padding: 1rem; }
+    .section-title { font-size: 1.6rem; }
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .5rem; }
+    .card { font-size: .8rem; padding: .75rem .7rem; }
+    .card-icon { width: 24px; height: 24px; font-size: .75rem; }
+
+    /* home */
+    .home-greeting { font-size: clamp(1.6rem, 8vw, 2.5rem); }
+    .home-cards { grid-template-columns: 1fr 1fr; }
+    .home-card { padding: 1.1rem; }
+    .home-card-icon { font-size: 1.4rem; margin-bottom: .5rem; }
+    .home-card-title { font-size: 1rem; }
+
+    /* series tabs */
+    .series-tab { font-size: .75rem; padding: .35rem .75rem; }
+
+    /* admin form */
+    .add-form { padding: 1.25rem; }
+  }
+
+  /* ── TOUCH: bigger tap targets ── */
+  @media (hover: none) and (pointer: coarse) {
+    .card { min-height: 52px; }
+    .nav-btn { min-height: 44px; }
+    .btn-primary { min-height: 50px; font-size: 1rem; }
+    .login-box input { min-height: 50px; font-size: 1rem; }
+    .series-tab { min-height: 36px; }
+  }
+
+  /* ── DESKTOP: max-width container ── */
+  @media (min-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); }
+    .home-cards { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">CRED</div>
+  <div class="login-tagline">Coconut Republic Entertainment</div>
+  <div class="login-box">
+    <input type="text" id="login-name" placeholder="Username" autocomplete="off" spellcheck="false">
+    <input type="password" id="login-pass" placeholder="Password">
+    <div id="login-error"></div>
+    <button class="btn-primary" onclick="doLogin()">Enter</button>
+    <div class="login-alt">
+      New here? <a onclick="goToJoin()">Join the republic</a>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">CRED</div>
+  <div class="loading-bar-outer"><div class="loading-bar-inner"></div></div>
+  <div class="loading-text">Loading...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div class="header-logo">CRED</div>
+    <div class="header-right">
+      <div class="user-pill">Logged in as <span id="username-display"></span></div>
+      <button class="logout-btn" onclick="doLogout()">Log out</button>
+    </div>
+  </header>
+
+  <nav>
+    <button class="nav-btn active" onclick="showSection('home', this)">Home</button>
+    <button class="nav-btn" onclick="showSection('movies', this)">Movies</button>
+    <button class="nav-btn" onclick="showSection('books', this)">Books</button>
+    <button class="nav-btn" id="admin-nav-btn" onclick="showSection('admin', this)" style="display:none">+ Add</button>
+  </nav>
+
+  <main>
+
+    <!-- HOME -->
+    <div id="sec-home" class="section active">
+      <div class="home-greeting">Welcome back, <em id="home-username"></em></div>
+      <div class="home-sub">What are you watching today?</div>
+      <div class="home-cards">
+        <div class="home-card" onclick="showSection('movies', document.querySelectorAll('.nav-btn')[1])">
+          <div class="home-card-icon">🎬</div>
+          <div class="home-card-title">Movies</div>
+          <div class="home-card-desc" id="home-movies-desc"></div>
+        </div>
+        <div class="home-card" onclick="showSection('books', document.querySelectorAll('.nav-btn')[2])">
+          <div class="home-card-icon">📚</div>
+          <div class="home-card-title">Books</div>
+          <div class="home-card-desc" id="home-books-desc"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOVIES -->
+    <div id="sec-movies" class="section">
+      <div id="movies-content"></div>
+    </div>
+
+    <!-- BOOKS -->
+    <div id="sec-books" class="section">
+      <div id="books-content"></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="sec-admin" class="section">
+      <div class="section-header">
+        <div class="section-title">➕ Add Content</div>
+        <div class="section-subtitle">Adds to this browser only (localStorage)</div>
+      </div>
+      <div class="add-form">
+        <div class="form-row">
+          <label>Section</label>
+          <select id="add-section" onchange="updateSeriesOptions()">
+            <option value="movies">Movies</option>
+            <option value="books">Books</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Series / Group</label>
+          <div style="display:flex;gap:.5rem">
+            <select id="add-series-select" style="flex:1"></select>
+            <span style="color:var(--muted);align-self:center;font-size:.8rem">or</span>
+            <input id="add-series-new" placeholder="New series name" style="flex:1">
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Title</label>
+          <input id="add-title" placeholder="e.g. Order of the Phoenix">
+        </div>
+        <div class="form-row">
+          <label>Link</label>
+          <input id="add-link" placeholder="https://...">
+        </div>
+        <div id="add-error" style="color:var(--accent2);font-size:.82rem;min-height:1.2em"></div>
+        <button class="btn-primary" style="width:auto;padding:.75rem 2rem" onclick="addItem()">Add</button>
+      </div>
+
+      <div style="margin-top:2.5rem">
+        <div class="section-title" style="font-size:1.4rem;margin-bottom:1rem">Manage existing</div>
+        <div id="manage-list"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ── API (copied from RCB Bank) ──
+const API_KEY = 'f1ff456c27c0b9149f70f55e4a71e4573d44058f';
+const API_URL = 'https://ikelene.dev/storage/';
+
+async function ikeleneGet(key) {
+  const res = await fetch(API_URL + 'get.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey: API_KEY, key })
+  });
+  const result = await res.json();
+  if (result && result.data && result.data.value != null) return result.data.value;
+  if (result && result.value != null) return result.value;
+  return '';
+}
+
+// Storage key for localStorage persistence of added items
+const STORE_KEY = 'cred_data_v1';
+
+const DEFAULT_DATA = {
+  movies: {
+    "One Piece": [
+      ["Romance Dawn",        "https://pixeldrain.net/l/At73d5SH"],
+      ["Orange Town",         "https://pixeldrain.net/l/WEJNxGhq"],
+      ["Syrup Village",       "https://pixeldrain.net/l/wZSPLqpA"],
+      ["Gaimon",              "https://pixeldrain.net/l/GSCf3j5A"],
+      ["Baratie",             "https://pixeldrain.net/l/JR7mF2uG"],
+      ["Arlong Park",         "https://pixeldrain.net/l/D5iMepBR"],
+      ["Adventures Buggy's",  "https://pixeldrain.net/l/E1QXSY7a"],
+      ["Reverse Mountain",    "https://pixeldrain.net/l/pjQN8XZL"],
+      ["Trials of Koby",      "https://pixeldrain.net/l/81KWfWcq"],
+      ["Little Garden",       "https://pixeldrain.net/l/89ocLnCv"],
+      ["Drum Island",         "https://pixeldrain.net/l/4juJksu7"],
+      ["Alabasta",            "https://pixeldrain.net/l/m6uYD3ir"],
+      ["Jaya",                "https://pixeldrain.net/l/P6mnmZpN"],
+      ["Skypiea",             "https://pixeldrain.net/l/9u9rcZLR"],
+      ["Long Ring Long Land", "https://pixeldrain.net/l/opsghUMA"],
+      ["Water Seven",         "https://pixeldrain.net/l/o8YkGt9i"],
+      ["Enies Lobby",         "https://pixeldrain.net/l/543jMNry"],
+      ["Post Enies Lobby",    "https://pixeldrain.net/l/upyN5vVk"],
+      ["Thriller Bark",       "https://pixeldrain.net/l/Cq9faLGv"],
+      ["Sabaody Archipelago", "https://pixeldrain.net/l/jhpKUqF8"],
+      ["Amazon Lily",         "https://pixeldrain.net/l/Bsr9gKsn"],
+      ["Impel Down",          "https://pixeldrain.net/l/y5ywnHdF"],
+      ["If You Could Go...",  "https://pixeldrain.net/l/cnjWovN9"],
+      ["Marineford",          "https://pixeldrain.net/l/uFuFpnpi"],
+      ["Post War",            "https://pixeldrain.net/l/7EANMSA7"],
+      ["Return to Sabaody",   "https://pixeldrain.net/l/igysH62b"],
+      ["Fishman Island",      "https://pixeldrain.net/l/o6ZzNwzp"],
+      ["Punk Hazard",         "https://pixeldrain.net/l/wJoipMZu"],
+      ["Dressrosa",           "https://pixeldrain.net/l/DMuj2Pqe"],
+      ["Zou",                 "https://pixeldrain.net/l/nSkEY2Cq"],
+      ["Whole Cake Island",   "https://pixeldrain.net/l/phsTwRmF"],
+      ["Reverie",             "https://pixeldrain.net/l/FnBXXzXi"],
+      ["Wano",                "https://pixeldrain.net/l/AEp1K6Dn"],
+      ["Egghead",             "https://pixeldrain.net/l/fPyGshT4"],
+      ["One Piece Fan Letter","https://pixeldrain.net/l/cTvXTid9"],
+      ["Warship Island 01",   "https://pixeldrain.net/l/y3pdBczx"],
+    ],
+    "Harry Potter": [
+      ["Sorcerer's Stone",    "https://drive.google.com/file/d/1GpzxbudF3TKFBVUdRXtom02M44lx_JFK/view?usp=drivesdk"],
+      ["Chamber of Secrets",  "https://drive.google.com/file/d/14925blkMBcheoMGmFq0up8m8pCqp0U_X/view?usp=drivesdk"],
+      ["Prisoner of Azkaban", "https://drive.google.com/file/d/1U1RT8cs_VI2Y8OchhcFY4ETX2U0KZeut/view?usp=drivesdk"],
+      ["Half-Blood Prince",   "https://drive.google.com/file/d/1dkJyjJGmlukvyua1DqY7QlPTRKq94C6P/view?usp=drivesdk"],
+      ["Deathly Hallows Pt 2","https://drive.google.com/file/d/1mXt5PkqoNaszp49aWbabjzrs-eHkfe_8/view?usp=drivesdk"],
+      ["Goblet of Fire",      "https://drive.google.com/file/d/1z9VsS6sw25fEuShoEfREDNNUZPzv_oY-/view?usp=drivesdk"],
+    ],
+  },
+  books: {
+    "Jujutsu Kaisen": [
+      ['Chapter 1 Ryomen Sukuna', 'https://drive.google.com/file/d/1EXWUJlca_iLV9_vg1Kv_IZHqFyLQI4eH/view?usp=drivesdk'],
+      ['Chapter 2 Secret Execution', 'https://drive.google.com/file/d/1j333Xu8s-wG7T1y_AFkAdQ0bKax8Nm6l/view?usp=drivesdk'],
+      ['Chapter 3 For Myself', 'https://drive.google.com/file/d/1G3wTZobP3Wz-yNWTJCCcOQ8trMlX8xl5/view?usp=drivesdk'],
+      ['Chapter 4 Steel Beam Girl', 'https://drive.google.com/file/d/1tzbgFscBWghVc6xMJMGhFjeSvntkBFQN/view?usp=drivesdk'],
+      ['Chapter 5 Beginning', 'https://drive.google.com/file/d/1fGVvjwwW7xjC7ya_T0g4M_4XHPBQ06oq/view?usp=drivesdk'],
+      ['Chapter 6 The Crused Womb\'s Earthly Existence', 'https://drive.google.com/file/d/1vzU-tmz8-0DtBmCZWd-Yp9EmeiUtmkEl/view?usp=drivesdk'],
+      ['Chapter 7 The Crused Womb\'s Earthly Existence (2)', 'https://drive.google.com/file/d/1CUzLC_HrgGNa4Yq1-Qvz5H1Ch-ney8m3/view?usp=drivesdk'],
+      ['Chapter 8 The Cursed Womb\'s Earthly Existence (3)', 'https://drive.google.com/file/d/1vwQO6u7wxrrQK2Fpy8Bn7p8N8dvF-02R/view?usp=drivesdk'],
+      ['Chapter 9 The Cursed Womb\'s Earthly Existence (4)', 'https://drive.google.com/file/d/1xj_S3Ib9Y4HXhbGSDzSq8KjwtUXwiZKU/view?usp=drivesdk'],
+      ['Chapter 10 After The Rain', 'https://drive.google.com/file/d/1INinaA3sJpXQm22j0Me3lHYaa3auJnyB/view?usp=drivesdk'],
+      ['Chapter 11 A Dream', 'https://drive.google.com/file/d/1Os_aU9CE_IqA1a45sW8Q3vXSfco3OUrR/view?usp=drivesdk'],
+      ['Chapter 12 Pushing Forward', 'https://drive.google.com/file/d/19dQH8I3p_r6ypteS2YRDyGXBmIkdg7_a/view?usp=drivesdk'],
+      ['Chapter 13 Movie Appreciation', 'https://drive.google.com/file/d/1aFtyfDCOlibUVn5Brrj8NE7tvnsLpKvk/view?usp=drivesdk'],
+      ['Chapter 14 A Sudden Attack', 'https://drive.google.com/file/d/1J8VTG9ppYgidV8Wdi9B83bTtQ7sNf-zN/view?usp=drivesdk'],
+      ['Chapter 15 Expansion', 'https://drive.google.com/file/d/10bcrXzcmaQCI5ZoqGo3nZtsZMXQ7PW7b/view?usp=drivesdk'],
+      ['Chapter 16 Compassion', 'https://drive.google.com/file/d/1C-hvyZStTedLzvnffkDgMk-xokOm4ICS/view?usp=drivesdk'],
+      ['Chapter 17 Boredom', 'https://drive.google.com/file/d/14Et76jT2LTCaP88-WRKVHF57BPiDRBwO/view?usp=drivesdk'],
+      ['Chapter 18 Low Class', 'https://drive.google.com/file/d/1SbSNkeQR44vzDLjcHlTqbm4cLSDah8z3/view?usp=drivesdk'],
+      ['Chapter 19', 'https://drive.google.com/file/d/1Slcki1oUWKWwTfrm9DLkKLQmyReYRcEc/view?usp=drivesdk'],
+      ['Chapter 20 Small Fry And Reverse Retribution (2)', 'https://drive.google.com/file/d/1I6IjDZ5sirlzG58g4G_9uLXmBZr81WIt/view?usp=drivesdk'],
+      ['Chapter 21 Small Fry And Reverse Retribution (3)', 'https://drive.google.com/file/d/19Xrw9OcqUfQt-B2wrwqbu6GRprop45a_/view?usp=drivesdk'],
+      ['Chapter 22', 'https://drive.google.com/file/d/18hNvTEzUzzwwaPeEgxbN2a79faNBZDTZ/view?usp=drivesdk'],
+      ['Chapter 23 Small Fry And Reverse Retribution V', 'https://drive.google.com/file/d/1Ac64f5Q18jwkzUQQxEeRhx9se1xbvx34/view?usp=drivesdk'],
+      ['Chapter 24 Small Fry And Reverse Retribution Vi', 'https://drive.google.com/file/d/1xLtGm-JD5bLmEuLIA7Q2uIf8w6KkG7Gx/view?usp=drivesdk'],
+      ['Chapter 25 Narrow-Minded Foolishness', 'https://drive.google.com/file/d/1tZ3A12NNjDmcx5i5z89EXK8twxkr25Ve/view?usp=drivesdk'],
+      ['Chapter 26 To You Of Someday', 'https://drive.google.com/file/d/127QRuBfoprVwUkTX6xFvW82pAyExAdEZ/view?usp=drivesdk'],
+      ['Chapter 27 If', 'https://drive.google.com/file/d/1q5wZ-9BcMclIkiz5Lnlln8JOUoWrxdfU/view?usp=drivesdk'],
+      ['Chapter 28 I\'ll Kill You', 'https://drive.google.com/file/d/100_U8d-oQrw6y5IAMYY1nZxJ6YAaPZjY/view?usp=drivesdk'],
+      ['Chapter 29 Growth', 'https://drive.google.com/file/d/1RlJKwbASxZqhV36QHUWXfsUFGc7OvJ9Y/view?usp=drivesdk'],
+      ['Chapter 30 Selfish', 'https://drive.google.com/file/d/1Sa1OgAabDAMAaOTHv1BlHrX-16zY0Yzr/view?usp=drivesdk'],
+      ['Chapter 31 See You Tomorrow', 'https://drive.google.com/file/d/17HcG-sUxGi5GY6QdwhOMwPM1mSru7in8/view?usp=drivesdk'],
+      ['Chapter 32 Reflection', 'https://drive.google.com/file/d/1xMV72kbvrvxe3DFbAcFcekN15cz43JCX/view?usp=drivesdk'],
+      ['Chapter 33 Exchange Festival With The Kyoto School - Team Battle 0', 'https://drive.google.com/file/d/16e-JHm1auw4ThyihUnpJKDn1Gkpmf655/view?usp=drivesdk'],
+      ['Chapter 34 Exchange Festival With The Kyoto School - Team Battle 1', 'https://drive.google.com/file/d/1dHj8p7-QFdyG7CRzdxvEHADWSvAKu09E/view?usp=drivesdk'],
+      ['Chapter 34.5 Jump Festa 2019 Short', 'https://drive.google.com/file/d/1BqmsImltPlis-JwvbpofQLumbGr4CYJs/view?usp=drivesdk'],
+      ['Chapter 35 Exchange Festival With The Kyoto School - Team Battle 2', 'https://drive.google.com/file/d/1eLD0U_64hhNHo9S2t0dkllLiQh3p2aIj/view?usp=drivesdk'],
+      ['Chapter 36 Exchange Festival With The Kyoto School - Team Battle 3', 'https://drive.google.com/file/d/1mZ5AfO1XgWOcz6zWbH5glqjopzn7L0ms/view?usp=drivesdk'],
+      ['Chapter 37 Exchange Festival With The Kyoto School - Team Battle 4', 'https://drive.google.com/file/d/1yESlmbdci6A59ASf4cmzIXK6y6cWYEXM/view?usp=drivesdk'],
+      ['Chapter 38 Exchange Festival With The Kyoto School - Team Battle 5', 'https://drive.google.com/file/d/1-xBs5kc_HxP1dJdAVd1aKWLS9yXViNTI/view?usp=drivesdk'],
+      ['Chapter 39 Exchange Festival With The Kyoto School - Team Battle 6', 'https://drive.google.com/file/d/1t8upxen7ae1MFOETGTuVq8af10MNFPxM/view?usp=drivesdk'],
+      ['Chapter 40 Kyoto Sister School Goodwill Event - Team Battle, Part 7', 'https://drive.google.com/file/d/1A9rRZNAVdx5ia0GHv4C02en943tUkIH7/view?usp=drivesdk'],
+      ['Chapter 41 Kyoto Sister School Goodwill Event - Team Battle, Part 8', 'https://drive.google.com/file/d/1lLMVZcdDsnjO6AcjkVA9eaZLTupz3FSu/view?usp=drivesdk'],
+      ['Chapter 42 Kyoto Sister School Goodwill Event - Team Battle, Part 9', 'https://drive.google.com/file/d/1iZYcEbwPDKH8_DAUeAPWpyAleJH-glGl/view?usp=drivesdk'],
+      ['Chapter 43 Kyoto Sister School Goodwill Event - Team Battle, Part 10', 'https://drive.google.com/file/d/1ePt00ytB_sOVXPSETM9H0qbi07aul0PL/view?usp=drivesdk'],
+      ['Chapter 44 Kyoto Sister School Goodwill Event - Team Battle, Part 11', 'https://drive.google.com/file/d/1_w6H119Y6mK5NjZbezcurumtZtRBC9rf/view?usp=drivesdk'],
+      ['Chapter 45 Wise Man', 'https://drive.google.com/file/d/1a5YI4Yh6l_OweJY2YM-WRHCobwX3l2Kr/view?usp=drivesdk'],
+      ['Chapter 46 Time', 'https://drive.google.com/file/d/1NOrhRDbPnVKRJFimp0OS72peZlD0waI0/view?usp=drivesdk'],
+      ['Chapter 47 Cursed Tool', 'https://drive.google.com/file/d/1rBRHUZSUxENtEJkwrKD6ajDiV_MQqJBr/view?usp=drivesdk'],
+      ['Chapter 48 Black Flash', 'https://drive.google.com/file/d/1_bMZK9wxgkoGIGPyn8yLdOSi7jQHA3D0/view?usp=drivesdk'],
+      ['Chapter 49 Constrained', 'https://drive.google.com/file/d/160FAgkugLQvLNE2GX4js4Y7yPr5r1IoW/view?usp=drivesdk'],
+      ['Chapter 50 Premonition', 'https://drive.google.com/file/d/1GZChpDSc7TIRG5abol5nkjWS9_eZZ35M/view?usp=drivesdk'],
+      ['Chapter 51 Flower', 'https://drive.google.com/file/d/1hD_otQsgDESAXd1n2qmGzI4Mqp3QLEah/view?usp=drivesdk'],
+      ['Chapter 52 Non-Standard', 'https://drive.google.com/file/d/1dv5YkorKd48i117wsQlrpJJu8p-p3tIT/view?usp=drivesdk'],
+      ['Chapter 53 Completion', 'https://drive.google.com/file/d/12w9LCIAKijyEhAFDAAzz4s20gO8BmbJ7/view?usp=drivesdk'],
+      ['Chapter 54 Jujutsu Koshien', 'https://drive.google.com/file/d/1cneZihlKWPWfryC6I51FBVwDZwYdv5Bi/view?usp=drivesdk'],
+      ['Chapter 55 The Origin Of Obedience', 'https://drive.google.com/file/d/1p2mwXVu7VOSvO5S4TAg0Ip1-z1HaVZPH/view?usp=drivesdk'],
+      ['Chapter 56 The Origin Of Obedience. Part 2', 'https://drive.google.com/file/d/1WQpWzCJ0LsUq7h2ws-vBxTnWN92Fq9Ax/view?usp=drivesdk'],
+      ['Chapter 57 The Origin Of Obedience, Part 3', 'https://drive.google.com/file/d/1X8m2WzgP8MAaZFeoXva5DkVkxHzxO0Lm/view?usp=drivesdk'],
+      ['Chapter 58 The Origin Of Obedience, Part 4', 'https://drive.google.com/file/d/1StpACN_OS1D57FB1BQPGAsi1seSjT08f/view?usp=drivesdk'],
+      ['Chapter 59 Origin Of Obedience V', 'https://drive.google.com/file/d/1fwWix9OqAXymjKvxTUK8sAdd6Ux9jWVA/view?usp=drivesdk'],
+      ['Chapter 60 Origin Of Obedience Vi', 'https://drive.google.com/file/d/1DzQJslhf_GkbyxbXRX6Tm8LskVxvbT2e/view?usp=drivesdk'],
+      ['Chapter 61', 'https://drive.google.com/file/d/1KEUwm0GdOm-ARv4jEU0aK2MlDF3-miL3/view?usp=drivesdk'],
+      ['Chapter 62 The Origin Of Obedience, Part 8', 'https://drive.google.com/file/d/1jOONKoygjpvimbpM9rq1l8HgPznbKEBC/view?usp=drivesdk'],
+      ['Chapter 63 Accomplices', 'https://drive.google.com/file/d/19jf-FfMYl1AtnUogCHrF8Q7L_HQtzIiz/view?usp=drivesdk'],
+      ['Chapter 64 It\'s Like That', 'https://drive.google.com/file/d/1IhHdrry-MT_6kdbSA71bjECKYX3CvakY/view?usp=drivesdk'],
+      ['Chapter 65 Hidden Inventory', 'https://drive.google.com/file/d/1olk8VKIKo1v3EDXIwUEDJnRckPuZdrsM/view?usp=drivesdk'],
+      ['Chapter 66 Hidden Inventory, Part 2', 'https://drive.google.com/file/d/1iX2qUpa3pyf-gQoQWr5UofXGGicA9k2O/view?usp=drivesdk'],
+      ['Chapter 67 Hidden Inventory, Part 3', 'https://drive.google.com/file/d/17v6l7GegqVrqzUU9S7ZwibJibVa88l-w/view?usp=drivesdk'],
+      ['Chapter 68 Hidden Inventory, Part 4', 'https://drive.google.com/file/d/1seynXkRD_mBZjAlh7THKEzDtz1m4behd/view?usp=drivesdk'],
+      ['Chapter 69 Hidden Inventory, Part 5', 'https://drive.google.com/file/d/12bJj773C7B4EhMMnmcgWknoIMTpL9d5p/view?usp=drivesdk'],
+      ['Chapter 70 Hidden Inventory, Part 6', 'https://drive.google.com/file/d/1cmiES7RZHg_IjPnorY-nTE6FeK07mzFs/view?usp=drivesdk'],
+      ['Chapter 71 Hidden Inventory, Part 7', 'https://drive.google.com/file/d/1AxGlTOjzg4nthWyYwb9VU0kUhL9ULCoS/view?usp=drivesdk'],
+      ['Chapter 72 Hidden Inventory, Part 8', 'https://drive.google.com/file/d/1O96ef8MwKNmSxNIhjcozYfRGsFcJ8RG1/view?usp=drivesdk'],
+      ['Chapter 73 Hidden Inventory, Part 9', 'https://drive.google.com/file/d/1p2WF_x_-_S23BoizuMT_-yb9peE-XJOh/view?usp=drivesdk'],
+      ['Chapter 74 Hidden Inventory X', 'https://drive.google.com/file/d/1QgVxsSrpM1LWoH7_32joCg9pB2wxIZZl/view?usp=drivesdk'],
+      ['Chapter 75 Hidden Inventory Xi', 'https://drive.google.com/file/d/16meqyubpDCRs2VHfOgUDTv43fsQ4gS2J/view?usp=drivesdk'],
+      ['Chapter 76 Premature Death', 'https://drive.google.com/file/d/1awiJZoQ8xnjX5Oy0hG1bgFQfN3RyrIFe/view?usp=drivesdk'],
+      ['Chapter 77 Premature Death Ii', 'https://drive.google.com/file/d/1yJVynxc0YfPF_D9Vhq6PU_EHl7QGSphh/view?usp=drivesdk'],
+      ['Chapter 78 Premature Death Iii', 'https://drive.google.com/file/d/1geNdh_0k_fA_PFNvvKEYHzYmGVVlYYPJ/view?usp=drivesdk'],
+      ['Chapter 79 A Taste Of Things To Come', 'https://drive.google.com/file/d/1Oi-44QfwQN4OJxvj1GudUnTZb_KRoXM-/view?usp=drivesdk'],
+      ['Chapter 80 Pre-Festival', 'https://drive.google.com/file/d/1UVaZrV8TugxP98SR-NFICrQJzvoQk4oY/view?usp=drivesdk'],
+      ['Chapter 81 Pre-Festival Ii', 'https://drive.google.com/file/d/18HycraOMXi2eZ6H0luKu0Jhrb0ocsR6C/view?usp=drivesdk'],
+      ['Chapter 82 Pre-Festival Iii', 'https://drive.google.com/file/d/1C2L-0cCSH2q7FKmBU25fyqRnMuL0eyJc/view?usp=drivesdk'],
+      ['Chapter 83 The Shibuya Incident, Part 1', 'https://drive.google.com/file/d/18qj0o0YKiSgFlZFbO7W0Sd-vK3Clyvjh/view?usp=drivesdk'],
+      ['Chapter 84 The Shibuya Incident, Part 2', 'https://drive.google.com/file/d/14WJ1DRp8bnKV9N_l_ZNAUeCMkO5VXtIU/view?usp=drivesdk'],
+      ['Chapter 85 The Shibuya Incident, Part 3', 'https://drive.google.com/file/d/123dCQCSyS5W741YEXFQkiH9lyHRNphwi/view?usp=drivesdk'],
+      ['Chapter 86 Shibuya Incident Iv', 'https://drive.google.com/file/d/1MVIvaz1z3JOSC4ePOvAQwXrDZqTzoXsy/view?usp=drivesdk'],
+      ['Chapter 87 Shibuya Incident Iv', 'https://drive.google.com/file/d/1qakiO22K4Ua2xWHw0NUV9Inzd1IKMK1Y/view?usp=drivesdk'],
+      ['Chapter 88 Shibuya Incident V', 'https://drive.google.com/file/d/1hKcs7GXrtqaUCpK4LUncjSR4UlL8iOb8/view?usp=drivesdk'],
+      ['Chapter 89', 'https://drive.google.com/file/d/1-q96jgzIU9K5T0IeNmG3-HWfm20BGcsY/view?usp=drivesdk'],
+      ['Chapter 90', 'https://drive.google.com/file/d/1hjkavH8Nw7LWZPCiJSUD1qz6lAxvNTtq/view?usp=drivesdk'],
+      ['Chapter 91', 'https://drive.google.com/file/d/1A4Ck4RKoph6mOppdS6e9AdC_QAOyf254/view?usp=drivesdk'],
+      ['Chapter 92', 'https://drive.google.com/file/d/1vvqAx-y9buEQpdx3YUh5yhXNIKCbu0B_/view?usp=drivesdk'],
+      ['Chapter 93', 'https://drive.google.com/file/d/1bLGEjQRGN12b6q4iZ1ijc4Amqxi4qeDe/view?usp=drivesdk'],
+      ['Chapter 94', 'https://drive.google.com/file/d/1J7yCq4Fjf7BrNx_aLLEtD9jLMj_2jolM/view?usp=drivesdk'],
+      ['Chapter 95', 'https://drive.google.com/file/d/1Gj7GjwNZ0enb6k8DSleWHklkTItCjkL-/view?usp=drivesdk'],
+      ['Chapter 96', 'https://drive.google.com/file/d/1EYeAgWjiK7XgbsyEhoJa3WB48V9lGfrp/view?usp=drivesdk'],
+      ['Chapter 97', 'https://drive.google.com/file/d/1THF1oS71N2OJYUNU_W3Nr_ve3bKm1IZi/view?usp=drivesdk'],
+      ['Chapter 98', 'https://drive.google.com/file/d/19iKM9mED1xZofxQRoxiL-RwfKuM2YYTM/view?usp=drivesdk'],
+      ['Chapter 99', 'https://drive.google.com/file/d/1-00_9DXmJ9bPqbl-Sla8dNZV3IIP8kyU/view?usp=drivesdk'],
+      ['Chapter 100', 'https://drive.google.com/file/d/1kpMMmDGT20AQh4g50tMdyoEnkNlmFSwE/view?usp=drivesdk'],
+      ['Chapter 101', 'https://drive.google.com/file/d/1LxdrdN4IvMDyW_SLXLeaIypp3P8Butkn/view?usp=drivesdk'],
+      ['Chapter 102', 'https://drive.google.com/file/d/1UviBfjqM2UBEzgmT69pyMX223K5vH-SH/view?usp=drivesdk'],
+      ['Chapter 103', 'https://drive.google.com/file/d/1J-_PKW_VCAQASZTrDQH5Jd7HJM7Qbuy6/view?usp=drivesdk'],
+      ['Chapter 104', 'https://drive.google.com/file/d/1c3f_SDs1hM4sBq4IuMJ8WlnBV6zlwxN1/view?usp=drivesdk'],
+      ['Chapter 105', 'https://drive.google.com/file/d/1H-dS0PlIdPK3uCbmdj1MeCenW4FYkYvi/view?usp=drivesdk'],
+      ['Chapter 106', 'https://drive.google.com/file/d/1eshzkgz6lifDrWVQWMJfiMZZrvVjscPj/view?usp=drivesdk'],
+      ['Chapter 107', 'https://drive.google.com/file/d/1N9Pv7X58NrbYfKE4inJwlGaVgf7IMYxc/view?usp=drivesdk'],
+      ['Chapter 108', 'https://drive.google.com/file/d/1csG38SnvMARWKgrzS_MndAjaOUIMiy3a/view?usp=drivesdk'],
+      ['Chapter 109', 'https://drive.google.com/file/d/1cZL-dn0sPODXMvjk3pqf0w33O5-R_fiw/view?usp=drivesdk'],
+      ['Chapter 110', 'https://drive.google.com/file/d/13s0-nrRaneJwdFkPqraR_ElGe_wpgz-u/view?usp=drivesdk'],
+      ['Chapter 111', 'https://drive.google.com/file/d/1m_xYk9nuPE6e67LUQuMYtEfQJuFJTxHZ/view?usp=drivesdk'],
+      ['Chapter 112', 'https://drive.google.com/file/d/1XWxc5nMUq9VuYt3bmjXdPLH5VoNBMFtc/view?usp=drivesdk'],
+      ['Chapter 113', 'https://drive.google.com/file/d/1ysw_8j6Li6Wy3xmAezDOYGqtxOlEcw_g/view?usp=drivesdk'],
+      ['Chapter 114', 'https://drive.google.com/file/d/1fTd5UZ3cNlOEUcNUntNmhMnDc82WATdG/view?usp=drivesdk'],
+      ['Chapter 115', 'https://drive.google.com/file/d/1vBgDb4GxmeXKV_X9YfPlJ7-LIIFvBqEZ/view?usp=drivesdk'],
+      ['Chapter 116 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1BOkfIxU_ZMo-HakfqTWoO-c9rlCafBaT/view?usp=drivesdk'],
+      ['Chapter 117 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1mw6IjaZk4KIAH5gH0LFqiTvOvYXW1WPz/view?usp=drivesdk'],
+      ['Chapter 118 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1XBzAO7d7VGO2K6jGvd9mnOtCOFfC_Y-1/view?usp=drivesdk'],
+      ['Chapter 119 The Shibuya Incident, Part', 'https://drive.google.com/file/d/19G_7k6gdleDRZ2JndwNILQUWQj7hV2YP/view?usp=drivesdk'],
+      ['Chapter 120 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1Jo5Pw6br3uZFXJp75FcJ7O5-W1NBy-9t/view?usp=drivesdk'],
+      ['Chapter 121 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1wPhnl5SF4JbM1zJghYi2EALe1VNeVKI2/view?usp=drivesdk'],
+      ['Chapter 122 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1kMRphtCQnlqvs63-IaCrcrarVlE5YdK0/view?usp=drivesdk'],
+      ['Chapter 123', 'https://drive.google.com/file/d/1-IoSXfEcph3LWHuc6h43o9CUBXbdO8aN/view?usp=drivesdk'],
+      ['Chapter 124 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1REW206aQYlbDSx06W8TcLbiFkrmjXDXe/view?usp=drivesdk'],
+      ['Chapter 125 A Story About That Girl', 'https://drive.google.com/file/d/1-Mzcr_OMyCV_Ep7VIxZ6aaNOLMoXanoI/view?usp=drivesdk'],
+      ['Chapter 126 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1c57s4ny8edIImMQ__EAmoyUDzU-y2NC_/view?usp=drivesdk'],
+      ['Chapter 127 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1bzFjjnTHHAbPXW-UXkvmPk1XAe_H5lsd/view?usp=drivesdk'],
+      ['Chapter 128 The Shibuya Incident, Part', 'https://drive.google.com/file/d/12Jtr0oF-2aj3XR4U167cmgvQjmnDNakR/view?usp=drivesdk'],
+      ['Chapter 129 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1AQvy2m1tF5yus3RL7piZyVf_t1xzte6O/view?usp=drivesdk'],
+      ['Chapter 129.5', 'https://drive.google.com/file/d/14k0a_8qYotTqEwhTHar4AAkeRpnEZs2Z/view?usp=drivesdk'],
+      ['Chapter 130 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1Kpnlk1lS9s3LGLo9zemaBzur2rcu44Mk/view?usp=drivesdk'],
+      ['Chapter 131 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1t2G3EVlXC4nuh6zFGsV98ddUhU9tNqos/view?usp=drivesdk'],
+      ['Chapter 132 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1u5y_947LC8pK3Q-7viOpHbTRL91u7D8i/view?usp=drivesdk'],
+      ['Chapter 132.5', 'https://drive.google.com/file/d/1UCyvL9qebM7QZas81Vy6w-pKnbjTzlE0/view?usp=drivesdk'],
+      ['Chapter 133 The Shibuya Incident, Part', 'https://drive.google.com/file/d/14_5ka97rfDoDCOBdvbWiIiuidkkSLXVI/view?usp=drivesdk'],
+      ['Chapter 134 The Shibuya Incident, Part', 'https://drive.google.com/file/d/19UshoN-dzS_S1ECiNKBuk1TPXBPvz-ga/view?usp=drivesdk'],
+      ['Chapter 135 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1ngMMwOC0ptCAMxpgXZzcVylTWB5nS4UE/view?usp=drivesdk'],
+      ['Chapter 136 The Shibuya Incident, Part', 'https://drive.google.com/file/d/1WDT0Dyw8__ds-N-PUaUENwTWTLFV24j_/view?usp=drivesdk'],
+      ['Chapter 137 Hard And White', 'https://drive.google.com/file/d/1da1_UEUUjwNHnYVPeXX1-SXAcDMIxnX8/view?usp=drivesdk'],
+      ['Chapter 138 The Zen\'in Clan', 'https://drive.google.com/file/d/1kpmsVn4r5_e3mjLW-ez8I6Fv0LpkbdW5/view?usp=drivesdk'],
+      ['Chapter 139 Hunter', 'https://drive.google.com/file/d/18kpqOqkYBWHFXQkOE85oZnwoSEIc6sQ0/view?usp=drivesdk'],
+      ['Chapter 140 Execution', 'https://drive.google.com/file/d/1Z4tTITL2NXVFQplnTD2KCdXWINaT5OUH/view?usp=drivesdk'],
+      ['Chapter 141 The Front Of The Back', 'https://drive.google.com/file/d/1zZg6ksV4fULHLWzeIzmggtLTYMIQ7-L3/view?usp=drivesdk'],
+      ['Chapter 142 A Big Brother\'s Back', 'https://drive.google.com/file/d/1oMpmUf9Ui6OHtRjFZg0EnEFcC0Z6kkMD/view?usp=drivesdk'],
+      ['Chapter 143 One More Time', 'https://drive.google.com/file/d/1y3t7mQxrLlLfkxeKwA0tn0r_pgRB3bug/view?usp=drivesdk'],
+      ['Chapter 144 That Place', 'https://drive.google.com/file/d/1qi7aSJuvBWVW67yxb480Gi0tkZDP_ELN/view?usp=drivesdk'],
+      ['Chapter 145 The Back', 'https://drive.google.com/file/d/1uU0AREc67ClhgKzkU6uBHZfvgz0nk3xj/view?usp=drivesdk'],
+      ['Chapter 146 About The Culling Game', 'https://drive.google.com/file/d/1ESZY-nnrhmtUc2yx3pnC0rjsyGU7E3NP/view?usp=drivesdk'],
+      ['Chapter 147 Even Pandas', 'https://drive.google.com/file/d/1qT6MJsegTV1m5iA_hShCF3fQcV7X9xuR/view?usp=drivesdk'],
+      ['Chapter 148', 'https://drive.google.com/file/d/1osGrB3Ia34YUgEBcouK4ue0b5bvnllkk/view?usp=drivesdk'],
+      ['Chapter 149 Perfect Preparation (Part 2)', 'https://drive.google.com/file/d/1yyjfTr0Dh1MlG6qol8yo7j8gvol3hdUF/view?usp=drivesdk'],
+      ['Chapter 150 Perfect Preparation (Part 3)', 'https://drive.google.com/file/d/1ZnexSmyAo5KIAH9IeUuDnwHMFzSIQk32/view?usp=drivesdk'],
+      ['Chapter 151', 'https://drive.google.com/file/d/1vj1w593GzHC4e8zZJ3HqH3ZuSV0A832K/view?usp=drivesdk'],
+      ['Chapter 152', 'https://drive.google.com/file/d/1nGE3OOGwnzZyMteAGRsV3Wr3Gw6Mu2Ac/view?usp=drivesdk'],
+      ['Chapter 153', 'https://drive.google.com/file/d/1NZsH2UJ3D7_Ao1COghoLo_DcWRIyGdHK/view?usp=drivesdk'],
+      ['Chapter 154', 'https://drive.google.com/file/d/13BQ9Bt-nhukl93kDyoGGRRNO8qbVmxyn/view?usp=drivesdk'],
+      ['Chapter 155', 'https://drive.google.com/file/d/1r7eqTrAKi3Bfyd2hQ7bDP38yCTeXQRlv/view?usp=drivesdk'],
+      ['Chapter 156', 'https://drive.google.com/file/d/1oN7F_BTpuurjWXunV-Hb9FGJZW-5Oc2r/view?usp=drivesdk'],
+      ['Chapter 157', 'https://drive.google.com/file/d/1l2cXG1_ggnFb3HOoIcDYkmLN66PVHvkq/view?usp=drivesdk'],
+      ['Chapter 158', 'https://drive.google.com/file/d/1ti2stg4i2Aai8tILtjqVQQhCzCGQrGfF/view?usp=drivesdk'],
+      ['Chapter 159 Judgment', 'https://drive.google.com/file/d/176PqYvByPlpxDG9mBFoRgbVczQdTyZmn/view?usp=drivesdk'],
+      ['Chapter 159', 'https://drive.google.com/file/d/10G3SEVeFqL51lFGfvTvRAMmcec9XjCCK/view?usp=drivesdk'],
+      ['Chapter 160', 'https://drive.google.com/file/d/13oy0sf8KYuDsEcJH2t6uLWF0QI8i_KAT/view?usp=drivesdk'],
+      ['Chapter 161', 'https://drive.google.com/file/d/1-w5B8HPTsae77j77cSQE0Wj0JjxwQoT3/view?usp=drivesdk'],
+      ['Chapter 162', 'https://drive.google.com/file/d/1btEVJOH4RaDWIgOanBN2PQGi6f-PQJf9/view?usp=drivesdk'],
+      ['Chapter 163', 'https://drive.google.com/file/d/145A1TuRWU1ReomlB43PzHx2Iz2pdyiT7/view?usp=drivesdk'],
+      ['Chapter 164', 'https://drive.google.com/file/d/1ql4YJEPxRHJjjTGK5vtm9N_vecKA-P6n/view?usp=drivesdk'],
+      ['Chapter 165', 'https://drive.google.com/file/d/1wWhC11tLGWJaZPJ5PB2AQFD_6Zj3YJAp/view?usp=drivesdk'],
+      ['Chapter 166', 'https://drive.google.com/file/d/1jkTN-C5T8v1x26OlzTwaYew7uVqI3Jbq/view?usp=drivesdk'],
+      ['Chapter 167', 'https://drive.google.com/file/d/1JV-krnFpGHKZsSWZ2Pv2XNJ7PSz9O0dj/view?usp=drivesdk'],
+      ['Chapter 168.5', 'https://drive.google.com/file/d/1PmKsodgNgQmCaGFA_VxWi18qWa7LESqY/view?usp=drivesdk'],
+      ['Chapter 168', 'https://drive.google.com/file/d/1Kg9B9m_Dw79cwcoV7W8Bx7vpXbcwCDra/view?usp=drivesdk'],
+      ['Chapter 169', 'https://drive.google.com/file/d/1x_2BKQK9mQVHirnM9D9nm9yyRAU94_et/view?usp=drivesdk'],
+      ['Chapter 170', 'https://drive.google.com/file/d/1iwYRCCLCR2RXIIgmRx7REYSzddZGVtNA/view?usp=drivesdk'],
+      ['Chapter 171', 'https://drive.google.com/file/d/19WjlJN_gSKBS7KTdJ2ox4vPzGi7Sq2Hi/view?usp=drivesdk'],
+      ['Chapter 172', 'https://drive.google.com/file/d/1MJD1L3bFhdcmg83OQqrrmfFHBRDUFzfh/view?usp=drivesdk'],
+      ['Chapter 173', 'https://drive.google.com/file/d/1_i8MpdN3YM8airxuxIwTvNHP5j45_7dH/view?usp=drivesdk'],
+      ['Chapter 174', 'https://drive.google.com/file/d/1suS_x5DVG4m5v_cU0yBzShZ7LxfNskYS/view?usp=drivesdk'],
+      ['Chapter 175 Sendai Colony ②', 'https://drive.google.com/file/d/1GWihLcKxEw3CekJLzfsPSlPnDqpWAFvu/view?usp=drivesdk'],
+      ['Chapter 176', 'https://drive.google.com/file/d/1Js-sylPJQFcr-oFE39LOddaSKg1RHbcz/view?usp=drivesdk'],
+      ['Chapter 177', 'https://drive.google.com/file/d/1Yg2XbweWrcVHsI0mg9c8wtJXO6FzH1dd/view?usp=drivesdk'],
+      ['Chapter 178', 'https://drive.google.com/file/d/1YuB0BiBlcgNmqtc07BDzqi2V2r4kZf6O/view?usp=drivesdk'],
+      ['Chapter 179 Sendai Colony ⑥', 'https://drive.google.com/file/d/1muwS9snpx0Oz0g72ZVhxcxBLAIY4Z12Z/view?usp=drivesdk'],
+      ['Chapter 180', 'https://drive.google.com/file/d/1UI2iQQERoD_n532qdjbCdwXNohxgpYUV/view?usp=drivesdk'],
+      ['Chapter 181', 'https://drive.google.com/file/d/1wzCq4BHHDP0GV_fZCffO1omeckVUdvRQ/view?usp=drivesdk'],
+      ['Chapter 182 Tokyo No.2 Colony ②', 'https://drive.google.com/file/d/1hOkMuocALClIwR08wtrw87a8dRLNUknx/view?usp=drivesdk'],
+      ['Chapter 183', 'https://drive.google.com/file/d/1FkEE7DX6icxO2ezG9HIWBZjFjwPFrrRJ/view?usp=drivesdk'],
+      ['Chapter 184', 'https://drive.google.com/file/d/1n_3Di4lbTSbkYewBRAmBP5i-8bV3Gz6k/view?usp=drivesdk'],
+      ['Chapter 185', 'https://drive.google.com/file/d/1BIpIds2A5s4u1TCFmeaDAvSe89hxt6dO/view?usp=drivesdk'],
+      ['Chapter 186', 'https://drive.google.com/file/d/1VoqHFT70w2-7aTeLUgrOKZQAqoa5ioEX/view?usp=drivesdk'],
+      ['Chapter 187', 'https://drive.google.com/file/d/1RiF3v9CSs31VtJH6lIXBqGMcFu7OcXDz/view?usp=drivesdk'],
+      ['Chapter 188 Tokyo No.2 Colony ⑦', 'https://drive.google.com/file/d/1_XKDYwfzEsjreakDC8DNV_EmhvBKfFOC/view?usp=drivesdk'],
+      ['Chapter 189', 'https://drive.google.com/file/d/1ilRKD-natxoAGHlakpRbFjYSpLwKhj6f/view?usp=drivesdk'],
+      ['Chapter 190', 'https://drive.google.com/file/d/1ep_fi_WmxAwg_jpUWg86o0PIGO-Awlon/view?usp=drivesdk'],
+      ['Chapter 191', 'https://drive.google.com/file/d/1IgQY9Dy_Q6A2WILzP8xZIps76sTJhIA4/view?usp=drivesdk'],
+      ['Chapter 192 Sakurajima Colony ②', 'https://drive.google.com/file/d/1dyFcPW9I47pqzf7PK7h17ht0hMD4uzsq/view?usp=drivesdk'],
+      ['Chapter 193 Sakurajima Colony ③', 'https://drive.google.com/file/d/1kP4tQM7rbv3sTKnfO4mP0C0qJYQHTnYw/view?usp=drivesdk'],
+      ['Chapter 194 Sakurajima Colony ④', 'https://drive.google.com/file/d/1BSZsfPWwMVnUD0Zt2ySvmLEHbqAxjP-W/view?usp=drivesdk'],
+      ['Chapter 195 Sakurajima Colony ⑤', 'https://drive.google.com/file/d/1uQyR-b4qce41RdwDOHeFd5WyjxX9jNZJ/view?usp=drivesdk'],
+      ['Chapter 196 Sakurajima Colony ⑥', 'https://drive.google.com/file/d/14y1bcmGv66Nc6gWyBTzQM0LI0NWTrTrb/view?usp=drivesdk'],
+      ['Chapter 197 Sakurajima Colony ⑦', 'https://drive.google.com/file/d/1wiXk731n3PZCg5xnRT9xt6hUbrbvbKfE/view?usp=drivesdk'],
+      ['Chapter 198 Sakurajima Colony ⑧', 'https://drive.google.com/file/d/1qDlJkWEcB6YvqAJ-qninxNX3F3E5ahyd/view?usp=drivesdk'],
+      ['Chapter 199 Epithet', 'https://drive.google.com/file/d/1iM3N53CJ8CPYcHMHpKtyEtRrr_ZM8C6D/view?usp=drivesdk'],
+      ['Chapter 200 Direct Negotiations①', 'https://drive.google.com/file/d/1fb-5sfF4GDuCs2p9pCxip4mJPDgixZDM/view?usp=drivesdk'],
+      ['Chapter 201 Direct Negotiations ②', 'https://drive.google.com/file/d/1hg5x_IHu08lQlSPDrHVwa3lBbX89BwtF/view?usp=drivesdk'],
+      ['Chapter 202 Blood And Oil', 'https://drive.google.com/file/d/1ZeqZ7B2sQw5kR6GYvFf2S5vqoQFruzCn/view?usp=drivesdk'],
+      ['Chapter 203 Blood And Oil ②', 'https://drive.google.com/file/d/1wR4f3AqAs95SGJPYXgMTqshfz60dDcEh/view?usp=drivesdk'],
+      ['Chapter 204 Blood And Oil ③', 'https://drive.google.com/file/d/1obauucf67AWL1QcO8FiKBwi0mShQ8__a/view?usp=drivesdk'],
+      ['Chapter 205 Star And Oil', 'https://drive.google.com/file/d/1df3YwOAm6hqpXoF_5Yf1V43dc7V0kmaf/view?usp=drivesdk'],
+      ['Chapter 206 Star And Oil ②', 'https://drive.google.com/file/d/1iqeozH4Pait6vRxLBFDfoK5bEwTRIUh4/view?usp=drivesdk'],
+      ['Chapter 207 Star And Oil ③', 'https://drive.google.com/file/d/1r-Si8acZuraLe1dq73_fwpFo2TKBCJCo/view?usp=drivesdk'],
+      ['Chapter 208 Star And Oil ④', 'https://drive.google.com/file/d/1AQ-9ZzjQlnfiAGbft-X1vS6XTj3akiMD/view?usp=drivesdk'],
+      ['Chapter 209 Offering To The Unknown', 'https://drive.google.com/file/d/1d4qjjR0DwZFkkKpfCjwTizfBfDg8WHti/view?usp=drivesdk'],
+      ['Chapter 210 Offering To The Unknown ②', 'https://drive.google.com/file/d/1H92RW2RFQ62fPIX9LU4I5QfDUTmgpQGG/view?usp=drivesdk'],
+      ['Chapter 211 Ripen', 'https://drive.google.com/file/d/1S7KRySGfCcvIThTcKXAAE1ixviymyuNn/view?usp=drivesdk'],
+      ['Chapter 212', 'https://drive.google.com/file/d/1TwY7lvqj9XfgQlL5tQ5ERk3rvgViFBUC/view?usp=drivesdk'],
+      ['Chapter 213 Cursed Womb Under Heaven, Part 5', 'https://drive.google.com/file/d/1-qw-1acmFlSlH_U--idNo8oTZBoluibD/view?usp=drivesdk'],
+      ['Chapter 214 Cursed Womb Under Heaven, Part 6', 'https://drive.google.com/file/d/1MBMisoP6eulve3ed8nh4_VQaRthotgbJ/view?usp=drivesdk'],
+      ['Chapter 215 Cursed Womb Under Heaven, Part 7', 'https://drive.google.com/file/d/1W50C3mavL6tRjuikfmk6nJ-38070N2tZ/view?usp=drivesdk'],
+      ['Chapter 216 Bath', 'https://drive.google.com/file/d/14j3BeJoVGhhxwrLGLna4KGQFSZRJeMdj/view?usp=drivesdk'],
+      ['Chapter 217 Bath ②', 'https://drive.google.com/file/d/1zvy6Ysptv1DlpVNCm_DllGJ8R07dk1vo/view?usp=drivesdk'],
+      ['Chapter 218 Bath ③', 'https://drive.google.com/file/d/1sHxSzz2Ztmnts5ccz38IpI1GqCG0PaRq/view?usp=drivesdk'],
+      ['Chapter 219 Bath ④', 'https://drive.google.com/file/d/1bh8vxGFQXhD2byCImyxRoViQEde3cqDH/view?usp=drivesdk'],
+      ['Chapter 220', 'https://drive.google.com/file/d/12VIrr-_a_SchO14JSW5gLVg7Y5a5zHx0/view?usp=drivesdk'],
+      ['Chapter 221 Gain & Loss', 'https://drive.google.com/file/d/124_ffNBsNOts37GYyrMtd4qojU_mStKF/view?usp=drivesdk'],
+      ['Chapter 222 Omen', 'https://drive.google.com/file/d/13iNFzvm-C6LG8Wm-WZRM50-nOTE0ft-e/view?usp=drivesdk'],
+      ['Chapter 223 The Decisive Battle In The Uninhabited Demon-Infested Shinjuku ①', 'https://drive.google.com/file/d/1AYXoNHKv5P1TUE-zSqc7UWIWY-1kqrj_/view?usp=drivesdk'],
+      ['Chapter 224 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ②', 'https://drive.google.com/file/d/1Kf70ljMj1hNzZE15tqB0C5RRabMh446Y/view?usp=drivesdk'],
+      ['Chapter 225 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ③', 'https://drive.google.com/file/d/1143MZ02Pgvmu7AYC6ZR5SApyyGzHSiWN/view?usp=drivesdk'],
+      ['Chapter 226 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ④', 'https://drive.google.com/file/d/161utVc5vZj0jLjZ_4Pugcwy20llMJ3Rw/view?usp=drivesdk'],
+      ['Chapter 227 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑤', 'https://drive.google.com/file/d/14jlr7NJuPD3C2_dms3HZ0CethC7t_rq-/view?usp=drivesdk'],
+      ['Chapter 228 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑥', 'https://drive.google.com/file/d/1yQHDFXxiSDRwWCteyIlcIZsLv7vFjhjT/view?usp=drivesdk'],
+      ['Chapter 229 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑦', 'https://drive.google.com/file/d/1uLZt1xk_wH50ZZqYf9sZv67bTIfd3Ol_/view?usp=drivesdk'],
+      ['Chapter 230', 'https://drive.google.com/file/d/1C4-uQudah7uP3ZlcPhhdUc7oXxz7nCue/view?usp=drivesdk'],
+      ['Chapter 231 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑨', 'https://drive.google.com/file/d/1Ec-WuYQwFdVYyJmTXlOJ_LcivH-2f3BR/view?usp=drivesdk'],
+      ['Chapter 232 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑩', 'https://drive.google.com/file/d/1xNcHeb8tVVsd9FMvRb4C_cKJC0g5BV6j/view?usp=drivesdk'],
+      ['Chapter 233 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑪', 'https://drive.google.com/file/d/1nGeYPgYrXdFVfrm75DAAfSyOBQmqZcb6/view?usp=drivesdk'],
+      ['Chapter 234 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑫', 'https://drive.google.com/file/d/1hEUrNT6_Q1goCmzjtDb736fW4Y6d_FFT/view?usp=drivesdk'],
+      ['Chapter 235 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑬', 'https://drive.google.com/file/d/15SnEsiVcwe5SaONrZHHmiDMpnSGanNhP/view?usp=drivesdk'],
+      ['Chapter 236 Go South', 'https://drive.google.com/file/d/1uBrCaDt5O-1UliT1oee_xCWwALYin-63/view?usp=drivesdk'],
+      ['Chapter 237', 'https://drive.google.com/file/d/1IcW2Khr7gnoLUYDhJVPBygYzSdivNJCN/view?usp=drivesdk'],
+      ['Chapter 238 Chapter 238 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑮', 'https://drive.google.com/file/d/1_2RtYNls-hrL_6Ij1hRLir6Eyzp6ViNh/view?usp=drivesdk'],
+      ['Chapter 239', 'https://drive.google.com/file/d/1ebh3iYXKVr-gUWEj3fdlBkZv16ZAtsxF/view?usp=drivesdk'],
+      ['Chapter 240 Idiot Survivor!! ~Live On~', 'https://drive.google.com/file/d/19ujVbIrcyIGsyemWedo_Us8EFlyrFtm8/view?usp=drivesdk'],
+      ['Chapter 241 Idiot Survivor!! ~Move On Up~', 'https://drive.google.com/file/d/1x6rbtyog0k38ZnUuTzBJRM_lY-grhuKh/view?usp=drivesdk'],
+      ['Chapter 242 Idiot Survivor!! ~Soar Ever Higher~', 'https://drive.google.com/file/d/1xjpAqU-IHjeCl4eZ8iUpi-VsdM9TuzYS/view?usp=drivesdk'],
+      ['Chapter 243 Idiot Survivor!! ~Bounce Off The Walls~', 'https://drive.google.com/file/d/1a6McS2BKdSnYSvSnfF5dTZ6uL6vU8pyz/view?usp=drivesdk'],
+      ['Chapter 244 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑯', 'https://drive.google.com/file/d/1hwGt7_OIwUyez_h4gJujqO-1WUVFORhM/view?usp=drivesdk'],
+      ['Chapter 245 Chapter 245 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑰', 'https://drive.google.com/file/d/1KT7Itk1FSWu7FHHbjRiMBg6xOsgxH7lZ/view?usp=drivesdk'],
+      ['Chapter 246 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑱', 'https://drive.google.com/file/d/1jxeiLZgz41bTu6Erpbq_M5BQBNUaGzQ0/view?usp=drivesdk'],
+      ['Chapter 247 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑲', 'https://drive.google.com/file/d/1OgGvb8n0GfQhgRlQP-aMCVMhIYBfHoce/view?usp=drivesdk'],
+      ['Chapter 248 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ⑳', 'https://drive.google.com/file/d/1l6sy6nNhW0qDwj5F0sxALE3383a1oJ0A/view?usp=drivesdk'],
+      ['Chapter 249', 'https://drive.google.com/file/d/1nmK0ftMxpDfgpx6DCSxn6E_K012Qeiwv/view?usp=drivesdk'],
+      ['Chapter 250 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉒', 'https://drive.google.com/file/d/1FAkEvFW8lGmzKz1nNniY79APthB9hY4J/view?usp=drivesdk'],
+      ['Chapter 251 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉓', 'https://drive.google.com/file/d/1b048qcIoVuyCwvALxmSrbFzTSloNhhEJ/view?usp=drivesdk'],
+      ['Chapter 252 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉔', 'https://drive.google.com/file/d/16EJtdRG1jf4LLZxstglJl9A1SqWJ4whs/view?usp=drivesdk'],
+      ['Chapter 253 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉕', 'https://drive.google.com/file/d/1CnIhYaem0pRZNctKRT0ofZ3QFYQ9GGxi/view?usp=drivesdk'],
+      ['Chapter 254 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉖', 'https://drive.google.com/file/d/1ITudOdXgznXsrKj1d8sHYj1Bxkn5SC7H/view?usp=drivesdk'],
+      ['Chapter 255 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉗', 'https://drive.google.com/file/d/1dbORBV3XOJHa-HsNuJlsk-pRvmNqifkI/view?usp=drivesdk'],
+      ['Chapter 256 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉘', 'https://drive.google.com/file/d/19TjXfK0w6olsBs3WiFYrC3X3iWSPeQ7X/view?usp=drivesdk'],
+      ['Chapter 257', 'https://drive.google.com/file/d/1-uWxyQMSc6nBS3KFMeLir15GLqziLDfF/view?usp=drivesdk'],
+      ['Chapter 258', 'https://drive.google.com/file/d/1Sh5jM7UnAW4NP-r2aKPHMULtPI9QKUbF/view?usp=drivesdk'],
+      ['Chapter 259 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉛', 'https://drive.google.com/file/d/1907Q_JsjeVVPvlyFppT9M5fbwlf3t7WR/view?usp=drivesdk'],
+      ['Chapter 260 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉜', 'https://drive.google.com/file/d/1RWGomJ46weH8_CEkd0XK_F0OAljx2kv_/view?usp=drivesdk'],
+      ['Chapter 261 The Decisive Battle In The Uninhabited, Demon-Infested Shinjuku ㉞', 'https://drive.google.com/file/d/1YFnDYUdLJbdV5YxZlb34D_PF22D7Oijf/view?usp=drivesdk'],
+      ['Chapter 262.5', 'https://drive.google.com/file/d/13PbD9y0EQXBtQQ_ndSdKYs2eW0NwlAye/view?usp=drivesdk'],
+      ['Chapter 262', 'https://drive.google.com/file/d/1EdZrszVUEo8xCmr_YjyRLGHdRPoMCr87/view?usp=drivesdk'],
+      ['Chapter 263', 'https://drive.google.com/file/d/1h9kN9heZs5QaoFTU555jKTib9Sz1ySQu/view?usp=drivesdk'],
+      ['Chapter 264', 'https://drive.google.com/file/d/1Zz6FeAN41I6iA4W8YjFquZgsxxSqnBzi/view?usp=drivesdk'],
+      ['Chapter 265', 'https://drive.google.com/file/d/1SyOGmLimaLM6ubwy7EE2yeeUJnzzirtU/view?usp=drivesdk'],
+      ['Chapter 266', 'https://drive.google.com/file/d/1XBbMuUaOB_YnxdhmFzhBYktbpebIdlXi/view?usp=drivesdk'],
+      ['Chapter 267', 'https://drive.google.com/file/d/1aI3Zpkf4P_jAs_E-s2Ahp2QmisWqfsuq/view?usp=drivesdk'],
+      ['Chapter 268', 'https://drive.google.com/file/d/1UgRzZaLl9h1HqmILtw0QPXEzeSiC8jYd/view?usp=drivesdk'],
+      ['Chapter 269', 'https://drive.google.com/file/d/1-AQ7D44hSBUnQ-huwan1EMVTDNObxqAo/view?usp=drivesdk'],
+      ['Chapter 270', 'https://drive.google.com/file/d/1H3YpsPPrMPqMJYFXqNecg4n9485Pey7j/view?usp=drivesdk'],
+      ['Chapter 271', 'https://drive.google.com/file/d/1iieq-RUvP3p568HtADg8ILePSNoq6Jrf/view?usp=drivesdk']
+    ],
+    "Diary of a Wimpy Kid": [
+      ["Big Shot",             "https://drive.google.com/file/d/1qEP0Ic2t-ljFQxZEYusPtHOSMHC6s5Xi/view?usp=drive_link"],
+      ["Cabin Fever",          "https://drive.google.com/file/d/1FbBl1sNspZeywgQVmzIVMx8KOjEKd4-w/view?usp=drive_link"],
+      ["Diary Of a Wimpy Kid", "https://drive.google.com/file/d/1YMl5I5YdrJRzKBo4nVPIBI3PQ4-UOv1V/view?usp=drive_link"],
+      ["Diper Overload",       "https://drive.google.com/file/d/1WduR6OZE-oqXmCD_612nzYZvlp-Z31ae/view?usp=drive_link"],
+      ["Dog Days",             "https://drive.google.com/file/d/13ErB7S4VRI2fn4Hm9Aipix9wHZHcw7AO/view?usp=drive_link"],
+      ["Double Down",          "https://drive.google.com/file/d/1vm1yzpurzsbj3YsXd5Rpb9vSAlDjJCeE/view?usp=drive_link"],
+      ["Hard Luck",            "https://drive.google.com/file/d/12bbiyCfazjN-i-er6i4brFRQ63Ys0Y8C/view?usp=drive_link"],
+      ["Hot Mess",             "https://drive.google.com/file/d/1WeeBGfDj1ofSwzkDuun2elCtMZxDEX6x/view?usp=drive_link"],
+      ["Third Wheel",          "https://drive.google.com/file/d/1ZgLgdfLDE37jRrEJUQcnk-X5bbbb7TmB/view?usp=drive_link"],
+      ["The Meltdown",         "https://drive.google.com/file/d/1r7ApEvkqHn_7VfFd2-l8OhiGMnWrG9RD/view?usp=drive_link"],
+      ["The Last Straw",       "https://drive.google.com/file/d/1VJHQ-wOAQnFRd4j2Ly56R3EwzQn5SBdf/view?usp=drive_link"],
+      ["Old School",           "https://drive.google.com/file/d/1lxKA4bKA-Q8tH4Bkct5O7_KBi07mcE2w/view?usp=drive_link"],
+      ["No Brainer",           "https://drive.google.com/file/d/1KwK97r_8NypvvF5w-jVsJW4MD8hiE2aj/view?usp=drive_link"],
+      ["Rodrick Rules",        "https://drive.google.com/file/d/1vwUQXsZD0QvlIcSrUSzT-jqMPVVmhEYs/view?usp=drive_link"],
+      ["The Long Haul",        "https://drive.google.com/file/d/1bTKRah7zQRJ5szitWa3ihGkrOZnO9bBF/view?usp=drive_link"],
+      ["The Ugly Truth",       "https://drive.google.com/file/d/1a9z_eTdyJVc5-MvaF-XzrMnLGzOUEWjH/view?usp=drive_link"],
+      ["Wrecking Ball",        "https://drive.google.com/file/d/1jxyAfy3gIUovyb_dajxYU0DzerG1q7lC/view?usp=drive_link"],
+    ],
+  },
+};
+
+// ── STATE (merges defaults with anything saved in localStorage) ──
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (saved) return saved;
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA)); // deep clone
+}
+function saveState() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(STATE));
+}
+let STATE = loadState();
+
+// ── AUTH ──
+const ADMIN_USERS = ['RCB'];
+let currentUser = null;
+
+async function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const pass = document.getElementById('login-pass').value;
+  const err  = document.getElementById('login-error');
+  err.textContent = '';
+  if (!name || !pass) { err.textContent = 'Enter username and password.'; return; }
+
+  showLoading();
+  try {
+    const raw = await ikeleneGet('credentials');
+    let creds = {};
+    if (raw && raw.trim()) {
+      creds = JSON.parse(raw);
+      delete creds[''];
+    }
+    const stored = creds[name];
+    const pw = typeof stored === 'object' ? stored.password : stored;
+    if (pw === pass) {
+      currentUser = name;
+      hideLoading(false);
+      showApp();
+    } else {
+      hideLoading(true);
+      err.textContent = 'Wrong username or password.';
+    }
+  } catch(e) {
+    hideLoading(true);
+    err.textContent = 'Error contacting server. Try again.';
+  }
+}
+
+function goToJoin() {
+  window.open('https://ghostprogrammerz.github.io/CRB/', '_blank', 'noopener');
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-pass').value = '';
+  document.getElementById('login-error').textContent = '';
+}
+
+// ── SCREENS ──
+function showLoading() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('loading-screen').style.display = 'flex';
+}
+function hideLoading(showLogin) {
+  document.getElementById('loading-screen').style.display = 'none';
+  if (showLogin) document.getElementById('login-screen').style.display = 'flex';
+}
+function showApp() {
+  document.getElementById('username-display').textContent = currentUser;
+  document.getElementById('home-username').textContent = currentUser;
+  if (ADMIN_USERS.includes(currentUser)) {
+    document.getElementById('admin-nav-btn').style.display = '';
+  }
+  document.getElementById('app').style.display = 'flex';
+  renderAll();
+}
+
+// ── RENDER ──
+function openLink(url) {
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+const SECTION_ICONS = {
+  movies: { "One Piece": "🏴‍☠️", "Harry Potter": "⚡", _default: "🎬" },
+  books:  { "Jujutsu Kaisen": "⚔️", "Diary of a Wimpy Kid": "📖", _default: "📚" },
+};
+
+function iconFor(section, series) {
+  const map = SECTION_ICONS[section] || {};
+  return map[series] || map._default || "📄";
+}
+
+function buildSeriesBlock(section, series, items) {
+  const icon = iconFor(section, series);
+  const grid = document.createElement('div');
+  grid.className = 'card-grid';
+  items.forEach(([name, url]) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.setAttribute('data-type', section === 'books' ? 'book' : 'op');
+    card.innerHTML = `<div class="card-icon">${icon}</div>${name}`;
+    card.onclick = () => openLink(url);
+    grid.appendChild(card);
+  });
+  return grid;
+}
+
+function renderSection(sectionId, containerId, titleIcon, titleText) {
+  const data = STATE[sectionId]; // { seriesName: [[title, url], ...] }
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+
+  const seriesNames = Object.keys(data);
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'section-header';
+  const totalItems = seriesNames.reduce((s, k) => s + data[k].length, 0);
+  hdr.innerHTML = `
+    <div class="section-title">${titleIcon} ${titleText}</div>
+    <div class="section-subtitle">${seriesNames.join(' · ')} · ${totalItems} items</div>
+  `;
+  container.appendChild(hdr);
+
+  if (seriesNames.length === 1) {
+    // Single series — no tabs needed
+    container.appendChild(buildSeriesBlock(sectionId, seriesNames[0], data[seriesNames[0]]));
+  } else {
+    // Tabs
+    const tabs = document.createElement('div');
+    tabs.className = 'series-tabs';
+    const panels = document.createElement('div');
+
+    seriesNames.forEach((series, i) => {
+      const tab = document.createElement('button');
+      tab.className = 'series-tab' + (i === 0 ? ' active' : '');
+      tab.textContent = series;
+      tab.onclick = () => {
+        tabs.querySelectorAll('.series-tab').forEach(t => t.classList.remove('active'));
+        panels.querySelectorAll('.series-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        panels.children[i].classList.add('active');
+      };
+      tabs.appendChild(tab);
+
+      const panel = document.createElement('div');
+      panel.className = 'series-panel' + (i === 0 ? ' active' : '');
+      panel.appendChild(buildSeriesBlock(sectionId, series, data[series]));
+      panels.appendChild(panel);
+    });
+
+    container.appendChild(tabs);
+    container.appendChild(panels);
+  }
+}
+
+function renderAll() {
+  renderSection('movies', 'movies-content', '🎬', 'Movies');
+  renderSection('books',  'books-content',  '📚', 'Books');
+
+  // Home desc
+  const mSeries = Object.keys(STATE.movies);
+  const bSeries = Object.keys(STATE.books);
+  const mCount  = mSeries.reduce((s,k) => s + STATE.movies[k].length, 0);
+  const bCount  = bSeries.reduce((s,k) => s + STATE.books[k].length, 0);
+  document.getElementById('home-movies-desc').textContent =
+    mSeries.join(', ') + ` · ${mCount} items`;
+  document.getElementById('home-books-desc').textContent =
+    bSeries.join(', ') + ` · ${bCount} items`;
+
+  updateSeriesOptions();
+  renderManageList();
+}
+
+// ── ADMIN: ADD ──
+function updateSeriesOptions() {
+  const section = document.getElementById('add-section').value;
+  const sel = document.getElementById('add-series-select');
+  sel.innerHTML = '';
+  Object.keys(STATE[section]).forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+function addItem() {
+  const section   = document.getElementById('add-section').value;
+  const selSeries = document.getElementById('add-series-select').value;
+  const newSeries = document.getElementById('add-series-new').value.trim();
+  const title     = document.getElementById('add-title').value.trim();
+  const link      = document.getElementById('add-link').value.trim();
+  const err       = document.getElementById('add-error');
+  err.textContent = '';
+
+  const series = newSeries || selSeries;
+  if (!series) { err.textContent = 'Choose or name a series.'; return; }
+  if (!title)  { err.textContent = 'Enter a title.'; return; }
+  if (!link)   { err.textContent = 'Enter a link.'; return; }
+  try { new URL(link); } catch(e) { err.textContent = 'Not a valid URL.'; return; }
+
+  if (!STATE[section][series]) STATE[section][series] = [];
+  STATE[section][series].push([title, link]);
+  saveState();
+
+  document.getElementById('add-series-new').value = '';
+  document.getElementById('add-title').value = '';
+  document.getElementById('add-link').value = '';
+  err.textContent = '';
+  err.style.color = '#5cb85c';
+  err.textContent = `"${title}" added to ${series}.`;
+  setTimeout(() => { err.textContent = ''; err.style.color = ''; }, 2500);
+
+  updateSeriesOptions();
+  renderManageList();
+  renderSection(section, section + '-content',
+    section === 'movies' ? '🎬' : '📚',
+    section === 'movies' ? 'Movies' : 'Books');
+}
+
+// ── ADMIN: MANAGE ──
+function renderManageList() {
+  const container = document.getElementById('manage-list');
+  container.innerHTML = '';
+  ['movies','books'].forEach(section => {
+    Object.entries(STATE[section]).forEach(([series, items]) => {
+      items.forEach(([title, url], idx) => {
+        const row = document.createElement('div');
+        row.className = 'manage-item';
+        row.innerHTML = `
+          <div class="manage-item-info">
+            <div class="manage-item-title">${title}</div>
+            <div class="manage-item-meta">${section} › ${series}</div>
+          </div>
+          <button class="del-btn">Remove</button>
+        `;
+        row.querySelector('.del-btn').onclick = () => {
+          STATE[section][series].splice(idx, 1);
+          if (STATE[section][series].length === 0) delete STATE[section][series];
+          saveState();
+          renderManageList();
+          renderSection(section, section + '-content',
+            section === 'movies' ? '🎬' : '📚',
+            section === 'movies' ? 'Movies' : 'Books');
+          updateSeriesOptions();
+        };
+        container.appendChild(row);
+      });
+    });
+  });
+  if (!container.childElementCount) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Nothing to manage yet.</p>';
+  }
+}
+
+// ── NAVIGATION ──
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── Enter key on login ──
+['login-name','login-pass'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+</script>
+</body>
+</html>
