@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta name="google-site-verification" content="obx6L5ZDxnQH8NvBSKOf1fg8Jse1mUZwGOi5ELP7hBE" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CRED</title>
@@ -21,7 +20,7 @@
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  #loading-screen, #app { display: none; }
+  #loading-screen, #app, #paywall-screen { display: none; }
   #app { flex-direction: column; min-height: 100vh; }
 
   body {
@@ -527,12 +526,27 @@
   <div class="loading-text">Loading...</div>
 </div>
 
+<!-- PAYWALL -->
+<div id="paywall-screen" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:0;">
+  <div class="login-logo">CRED</div>
+  <div class="login-tagline">Subscription Required</div>
+  <div class="login-box" style="gap:1.2rem;">
+    <div id="paywall-balance" style="text-align:center;font-size:1rem;color:var(--muted);">your balance: —</div>
+    <div style="text-align:center;font-size:.85rem;color:var(--muted);line-height:1.5;">
+      A weekly subscription of <strong style="color:var(--accent);">10D</strong> gives you full access to Books, Movies &amp; Notes.
+    </div>
+    <div id="paywall-error" style="color:var(--accent2);font-size:.82rem;text-align:center;min-height:1.2em;"></div>
+    <button class="btn-primary" onclick="doBuySubscription()">Buy Subscription — 10D / week</button>
+    <div class="login-alt"><a onclick="doLogout()">Sign out</a></div>
+  </div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <header>
     <div class="header-logo">CRED</div>
     <div class="header-right">
-      <div class="user-pill">Logged in as <span id="username-display"></span></div>
+      <div class="user-pill">Logged in as <span id="username-display"></span><span id="sub-expiry" style="margin-left:.6rem;font-size:.75rem;color:var(--muted);"></span></div>
       <button class="logout-btn" onclick="doLogout()">Log out</button>
     </div>
   </header>
@@ -632,6 +646,15 @@ async function ikeleneGet(key) {
   if (result && result.data && result.data.value != null) return result.data.value;
   if (result && result.value != null) return result.value;
   return '';
+}
+
+async function ikeleneSet(key, value) {
+  const res = await fetch(API_URL + 'set.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ apiKey: API_KEY, key, value })
+  });
+  try { return await res.json(); } catch(e) { return null; }
 }
 
 // Storage key for localStorage persistence of added items
@@ -1043,6 +1066,7 @@ function goToJoin() {
 function doLogout() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
+  document.getElementById('paywall-screen').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('login-pass').value = '';
   document.getElementById('login-error').textContent = '';
@@ -1057,7 +1081,37 @@ function hideLoading(showLogin) {
   document.getElementById('loading-screen').style.display = 'none';
   if (showLogin) document.getElementById('login-screen').style.display = 'flex';
 }
-function showApp() {
+async function showApp() {
+  // Check subscription (skip for admins)
+  if (!ADMIN_USERS.includes(currentUser)) {
+    showLoading();
+    try {
+      const usersRaw = await ikeleneGet('users');
+      console.log('[paywall] users raw:', usersRaw);
+      let users = {};
+      if (usersRaw && usersRaw.trim()) {
+        try { users = JSON.parse(usersRaw); } catch(e) { console.log('[paywall] users parse error:', e); }
+      }
+      const expiry = users[currentUser];
+      const now = Date.now();
+      console.log('[paywall] user:', currentUser, 'expiry:', expiry, 'now:', now, 'expired:', !expiry || now > Number(expiry));
+      if (!expiry || now > Number(expiry)) {
+        hideLoading(false);
+        await showPaywall();
+        return;
+      }
+      // Show days remaining
+      const daysLeft = Math.ceil((Number(expiry) - now) / 86400000);
+      document.getElementById('sub-expiry').textContent = '· ' + daysLeft + 'd left';
+    } catch(e) {
+      console.log('[paywall] showApp error:', e);
+      hideLoading(false);
+      await showPaywall();
+      return;
+    }
+    hideLoading(false);
+  }
+  document.getElementById('paywall-screen').style.display = 'none';
   document.getElementById('username-display').textContent = currentUser;
   document.getElementById('home-username').textContent = currentUser;
   if (ADMIN_USERS.includes(currentUser)) {
@@ -1065,6 +1119,72 @@ function showApp() {
   }
   document.getElementById('app').style.display = 'flex';
   renderAll();
+}
+
+async function showPaywall() {
+  // Show balance
+  try {
+    const dataRaw = await ikeleneGet('data');
+    let data = {};
+    if (dataRaw && dataRaw.trim()) {
+      try { data = JSON.parse(dataRaw); } catch(e) {}
+    }
+    const bal = data[currentUser] != null ? data[currentUser] : 0;
+    document.getElementById('paywall-balance').textContent = 'your balance: ' + bal + 'D';
+    document.getElementById('paywall-screen')._balanceData = data;
+  } catch(e) {
+    document.getElementById('paywall-balance').textContent = 'your balance: (error)';
+    document.getElementById('paywall-screen')._balanceData = {};
+  }
+  document.getElementById('paywall-error').textContent = '';
+  document.getElementById('paywall-screen').style.display = 'flex';
+}
+
+async function doBuySubscription() {
+  const errEl = document.getElementById('paywall-error');
+  errEl.textContent = '';
+  const ps = document.getElementById('paywall-screen');
+
+  showLoading();
+  try {
+    const dataRaw = await ikeleneGet('data');
+    console.log('[paywall] data raw:', dataRaw);
+    let data = {};
+    if (dataRaw && dataRaw.trim()) try { data = JSON.parse(dataRaw); } catch(e) { console.log('[paywall] data parse error:', e); }
+
+    const userBal = Number(data[currentUser] || 0);
+    console.log('[paywall] balance:', userBal);
+    if (userBal < 10) {
+      hideLoading(false);
+      errEl.textContent = 'Insufficient funds. You need at least 10D.';
+      document.getElementById('paywall-balance').textContent = 'your balance: ' + userBal + 'D';
+      return;
+    }
+
+    data[currentUser] = userBal - 10;
+    data['CRED'] = Number(data['CRED'] || 0) + 10;
+    const saveResult = await ikeleneSet('data', JSON.stringify(data));
+    console.log('[paywall] save data result:', saveResult);
+
+    const usersRaw = await ikeleneGet('users');
+    let users = {};
+    if (usersRaw && usersRaw.trim()) try { users = JSON.parse(usersRaw); } catch(e) {}
+    users[currentUser] = Date.now() + 604800000;
+    const saveUsers = await ikeleneSet('users', JSON.stringify(users));
+    console.log('[paywall] save users result:', saveUsers);
+
+    hideLoading(false);
+    ps.style.display = 'none';
+    document.getElementById('username-display').textContent = currentUser;
+    document.getElementById('home-username').textContent = currentUser;
+    document.getElementById('sub-expiry').textContent = '· 7d left';
+    document.getElementById('app').style.display = 'flex';
+    renderAll();
+  } catch(e) {
+    console.log('[paywall] buy error:', e);
+    hideLoading(false);
+    errEl.textContent = 'Error processing payment. Try again.';
+  }
 }
 
 // ── RENDER ──
