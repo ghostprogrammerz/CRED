@@ -649,12 +649,20 @@ async function ikeleneGet(key) {
 }
 
 async function ikeleneSet(key, value) {
-  const res = await fetch(API_URL + 'set.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ apiKey: API_KEY, key, value })
-  });
-  try { return await res.json(); } catch(e) { return null; }
+  // Try save.php first, fall back to set.php
+  for (const endpoint of ['save.php', 'set.php', 'store.php', 'update.php']) {
+    try {
+      const res = await fetch(API_URL + endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey: API_KEY, key, value })
+      });
+      const json = await res.json();
+      console.log('[ikeleneSet] tried', endpoint, '->', json);
+      if (json && (json.success || json.status === 'ok' || json.data)) return json;
+    } catch(e) { /* try next */ }
+  }
+  return null;
 }
 
 // Storage key for localStorage persistence of added items
@@ -1094,14 +1102,16 @@ async function showApp() {
       }
       const expiry = users[currentUser];
       const now = Date.now();
-      console.log('[paywall] user:', currentUser, 'expiry:', expiry, 'now:', now, 'expired:', !expiry || now > Number(expiry));
-      if (!expiry || now > Number(expiry)) {
+      // Strip commas in case old Scratch project stored "604,800,000" style
+      const expiryNum = Number(String(expiry || 0).replace(/,/g, ''));
+      console.log('[paywall] user:', currentUser, 'expiry:', expiry, 'expiryNum:', expiryNum, 'now:', now, 'expired:', !expiryNum || now > expiryNum);
+      if (!expiryNum || now > expiryNum) {
         hideLoading(false);
         await showPaywall();
         return;
       }
       // Show days remaining
-      const daysLeft = Math.ceil((Number(expiry) - now) / 86400000);
+      const daysLeft = Math.ceil((expiryNum - now) / 86400000);
       document.getElementById('sub-expiry').textContent = '· ' + daysLeft + 'd left';
     } catch(e) {
       console.log('[paywall] showApp error:', e);
